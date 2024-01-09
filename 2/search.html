@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>2</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="results">
+
+</div>
+<script>
+
+    const sites = ["reddit.com", "news.ycombinator.com", "ycombinator.com/companies", "producthunt.com", "stackexchange.com", "stackoverflow.com", "wikipedia.com", "twitter.com", "instagram.com", "wirecutter.com", "amazon.com", "github.com", "investopedia.com", "linkedin.com", "medium.com"]
+
+    const params = new URLSearchParams(location.search);
+    let q = params.get("q");
+
+    sites.forEach((site) => q = q.concat(` site:${site} OR`))
+    q = q.slice(0, -3)
+
+    for (let i = 0; i < 5; i++) {
+        fetch(`/api/search?q=${q}&start=${i * 10 + 1}`)
+            .then(response => response.json())
+            .then(data => {
+                const items = data.items;
+                items.forEach((item) => {
+                    let title = item.title;
+                    let link = item.link;
+                    let displayLink = item.displayLink
+                    if (displayLink.slice(0, 4) === "www.") {
+                        displayLink = displayLink.slice(4);
+                    }
+
+                    let resultDiv = document.createElement('div');
+                    let result = document.createElement('a');
+                    result.innerHTML = `${displayLink} - ${title}`;
+                    result.href = link;
+
+                    resultDiv.append(result)
+
+                    document.querySelector("#results").append(resultDiv);
+                })
+            })
+    }
+</script>
+</body>
+</html>

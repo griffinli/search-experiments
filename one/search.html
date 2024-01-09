@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>
+        @import url('https://rsms.me/inter/inter.css');
+        html { font-family: 'Inter', sans-serif; }
+
+        body {
+            margin: 0;
+        }
+
+        .selected {
+            background-color: #F4F6FB;
+        }
+
+        p {
+            margin-top: 5px;
+            margin-bottom: 0;
+            color: black;
+
+        }
+
+        a {
+            display: block;
+            text-decoration: none;
+        }
+
+        .result {
+            padding-left: 150px;
+            padding-right: 150px;
+            padding-top: 20px;
+            padding-bottom: 20px;
+        }
+
+        .title {
+            font-style: normal;
+            font-weight: 500;
+            font-size: 16px;
+            line-height: 15px;
+        }
+
+        .url {
+            font-style: normal;
+            font-weight: 400;
+            font-size: 12px;
+            line-height: 15px;
+        }
+
+        .description {
+            font-style: normal;
+            font-weight: 400;
+            font-size: 12px;
+            line-height: 15px;
+            color: #7F7F7F;
+        }
+
+    </style>
+    <script src="mousetrap.min.js"></script>
+    <title>One</title>
+</head>
+<body>
+
+<div id="results"></div>
+
+<script>
+    const params = new URLSearchParams(location.search);
+    const q = params.get("q");
+
+    function simplify(link) {
+        if (link.slice(0, 5) === "https") {
+            link = link.slice(8);
+        } else {
+            link = link.slice(7);
+        }
+
+        if (link.slice(0, 4) === "www.") {
+            link = link.slice(4);
+        }
+
+        if (link.slice(-1) === "/") {
+            link = link.slice(0, -1);
+        }
+        return link;
+    }
+
+    fetch(`/api/search?q=${q}`)
+        .then(response => response.json())
+        .then(data => {
+            const items = data.items;
+            items.forEach((item) => {
+                let result = document.createElement('a');
+                result.classList.add("result");
+                result.href = item.link;
+
+                let title = document.createElement('p');
+                title.classList.add("title");
+                title.innerHTML = item.title;
+
+                let url = document.createElement('p');
+                url.classList.add("url");
+                url.innerHTML = simplify(item.link);
+
+                let description = document.createElement('p');
+                description.classList.add("description");
+                description.innerHTML = item.snippet;
+
+
+                result.append(title);
+                result.append(url);
+                result.append(description);
+
+                result.onmousemove = function () {
+                    document.querySelectorAll(".result")[selectedIndex].classList.remove("selected");
+                    selectedIndex = [...result.parentElement.children].indexOf(result);
+                    document.querySelectorAll(".result")[selectedIndex].classList.add("selected")
+                }
+
+                document.querySelector("#results").append(result);
+            })
+            document.querySelector(".result").classList.add("selected");
+        })
+
+    selectedIndex = 0;
+
+
+    Mousetrap.bind('j', function() {
+        if (selectedIndex < 9) {
+            document.querySelectorAll(".result")[selectedIndex].classList.remove("selected");
+            document.querySelectorAll(".result")[selectedIndex + 1].classList.add("selected")
+            document.querySelectorAll(".result")[selectedIndex + 1].scrollIntoView(false);
+            selectedIndex += 1;
+        }
+    });
+
+    Mousetrap.bind('k', function() {
+        if (selectedIndex > 0) {
+            document.querySelectorAll(".result")[selectedIndex].classList.remove("selected");
+            document.querySelectorAll(".result")[selectedIndex - 1].classList.add("selected");
+            document.querySelectorAll(".result")[selectedIndex - 1].scrollIntoView(false);
+            selectedIndex -= 1;
+        }
+
+    });
+
+    Mousetrap.bind('enter', function () {
+        link = document.querySelectorAll(".result")[selectedIndex].href;
+        window.location.href = link;
+    })
+</script>
+</body>
+</html>
